@@ -5,7 +5,7 @@ module Storytime
 
       module ClassMethods
         def storytime_user
-          has_many :storytime_memberships, class_name: "::Storytime::Membership", dependent: :destroy
+          has_many :storytime_memberships, class_name: "::Storytime::Membership", dependent: :destroy, foreign_key: :user_id
           has_many :storytime_roles, through: :storytime_memberships
           has_many :storytime_sites, through: :storytime_memberships, source: :site
           
