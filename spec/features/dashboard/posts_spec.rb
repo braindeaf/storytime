@@ -5,6 +5,23 @@ describe "In the dashboard, Posts" do
     login_admin
   end
 
+  it "lists all posts" do
+    blog = @current_site.blogs.first
+    FactoryGirl.create(:post, blog: blog, site: @current_site, published_at: nil)
+    2.times{ FactoryGirl.create(:post, blog: blog, site: @current_site, published_at: 1.hours.ago) }
+    static_page = FactoryGirl.create(:page)
+
+    visit url_for([storytime, :dashboard, blog, :blog_page_post_index, only_path: true])
+
+    within "#main" do
+      blog.posts.each do |p|
+        expect(page).to have_content(p.title)
+      end
+
+      expect(page).not_to have_content(static_page.title)
+    end
+  end
+
   it "lists draft posts" do
     blog = @current_site.blogs.first
     3.times{ FactoryGirl.create(:post, blog: blog, site: @current_site, published_at: nil) }
@@ -12,12 +29,30 @@ describe "In the dashboard, Posts" do
     FactoryGirl.create(:post)
     static_page = FactoryGirl.create(:page)
 
-    visit url_for([storytime, :dashboard, blog, :blog_page_post_index, only_path: true])
+    visit url_for([storytime, :dashboard, blog, :blog_page_post_index, draft: true, only_path: true])
     
     within "#main" do
       blog.posts.each do |p|
         expect(page).to have_content(p.title) if p.published_at.nil?
         expect(page).not_to have_content(p.title) if p.published_at.present?
+      end
+
+      expect(page).not_to have_content(static_page.title)
+    end
+  end
+
+  it "lists published posts" do
+    blog = @current_site.blogs.first
+    FactoryGirl.create(:post, blog: blog, site: @current_site, published_at: nil)
+    2.times{ FactoryGirl.create(:post, blog: blog, site: @current_site, published_at: 3.hours.ago) }
+    static_page = FactoryGirl.create(:page)
+
+    visit url_for([storytime, :dashboard, blog, :blog_page_post_index, published: true, only_path: true])
+
+    within "#main" do
+      blog.posts.each do |p|
+        expect(page).to_not have_content(p.title) if p.published_at.nil?
+        expect(page).to have_content(p.title) if p.published_at.present?
       end
 
       expect(page).not_to have_content(static_page.title)

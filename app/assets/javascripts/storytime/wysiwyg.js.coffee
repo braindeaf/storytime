@@ -3,6 +3,7 @@ class Storytime.Dashboard.Wysiwyg
     buttons: ['bold', 'italic', 'underline', 'anchor', 'header1', 'header2', 'quote', 'unorderedlist', 'orderedlist', 'pre']
     toolbarAlign: 'center'
     buttonLabels: 'fontawesome'
+    checkLinkFormat: true
 
   codeMirrorOptions = 
     mode: 'htmlmixed'
@@ -52,6 +53,12 @@ class Storytime.Dashboard.Wysiwyg
         self.closeImageControls()
         mediumEditor.activate()
 
+    $('body').on "keyup", "#medium-image-caption", () ->
+      caption = $(".medium-active-image").parent(".storytime-image").find(".storytime-image-caption")
+      caption.css("width", $(".medium-active-image").width())
+      caption.text($(this).val())
+
+
     $("body").on 'click', '.medium-editor img', (e) ->
       active = $(this).hasClass("medium-active-image")
       unless active
@@ -59,19 +66,24 @@ class Storytime.Dashboard.Wysiwyg
         $(this).addClass "medium-active-image"
         $("#medium-image-width").val($(this)[0].style.width)
         $("#medium-image-height").val($(this)[0].style.height)
+        $("#medium-image-caption").val($(this).parent(".storytime-image").find(".storytime-image-caption").text())
         $("#medium-image-button").hide()
         $(".medium-image-controls").show()
         mediumEditor.deactivate()
 
     $('body').on "keyup", "#medium-image-width", () ->
+      $img = $(".medium-active-image")
       if $(this).val() == "" || $(this).val() == "auto"
-        $(".medium-active-image").css("width", "")
+        $img.css("width", "")
         $("#medium-image-height").val("")
         $("#medium-image-width").val("")
       else
-        $(".medium-active-image").css("width", $(this).val())
-        $(".medium-active-image").css("height", "")
-        $("#medium-image-height").val($(".medium-active-image").css("height"))
+        $img.css("width", $(this).val())
+        $img.css("height", "")
+        $("#medium-image-height").val($img.css("height"))
+
+      $caption = $img.parent(".storytime-image").find(".storytime-image-caption")
+      $caption.css("width", $img.css("width"))
 
     $('body').on "keyup", "#medium-image-height", () ->
       # set the height, then find the new width and set that and remove the height so image remains responsive
@@ -84,21 +96,20 @@ class Storytime.Dashboard.Wysiwyg
 
     $('body').on "click", ".medium-image-float", () ->
       direction = $(this).data("float")
-      image = $(".medium-active-image")
+      container = $(".medium-active-image").parent(".storytime-image")
       switch direction
-        when "left" then image.removeClass("pull-right pull-left").addClass("pull-left")
-        when "right" then image.removeClass("pull-right pull-left").addClass("pull-right")
-        when "none" then image.removeClass("pull-right pull-left")
+        when "left" then container.removeClass("pull-right pull-left").addClass("pull-left")
+        when "right" then container.removeClass("pull-right pull-left").addClass("pull-right")
+        when "none" then container.removeClass("pull-right pull-left").addClass("text-center")
 
     $('body').on "click", ".medium-image-delete", () ->
-      image = $(".medium-active-image")
+      image = $(".medium-active-image").parent(".storytime-image")
       image.remove()
       self.updateFromMediumEditor()
       self.closeImageControls()
       mediumEditor.activate()
 
   openImageControls: (image) ->
-    console.log image
     image.addClass("medium-active-image")
     $("#medium-image-width").val(image[0].style.width)
     $("#medium-image-height").val(image[0].style.height)
@@ -153,7 +164,8 @@ class Storytime.Dashboard.Wysiwyg
         editor.toggle()
         code.toggle()
 
-        html = tidy_html5 wysiwyg.find('.medium-editor').html(), tidyOptions
+        html = wysiwyg.find('.medium-editor').html()
+        html = tidy_html5 html, tidyOptions unless window.Storytime.test_env
         codemirror.setValue(html)
 
         codemirror.refresh()

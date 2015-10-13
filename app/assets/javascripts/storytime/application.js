@@ -13,13 +13,15 @@
 //= require_self
 //= require jquery
 //= require jquery_ujs
-//= require bootstrap
+//= require bootstrap-sprockets
 //= require leather
+//= require cocoon
 //= require jquery-ui/core
 //= require jquery-ui/datepicker
 //= require jquery-ui/position
 //= require jquery-ui/widget
 //= require jquery-ui/resizable
+//= require jquery-ui/sortable
 //= require jquery.ui.timepicker
 //= require jquery.iframe-transport.js
 //= require jquery.fileupload.js
@@ -30,9 +32,9 @@
 //= require codemirror/addons/fold/xml-fold
 //= require codemirror/addons/edit/closetag
 //= require codemirror/addons/edit/closebrackets
-//= require tidy
 //= require chosen.jquery
 //= require medium-editor.min
+//= require storytime_admin
 //= require_tree .
 
 window.Storytime || (window.Storytime = {})

@@ -5,14 +5,14 @@ module Storytime
     before_action :load_page
 
     def show
-      if params[:preview].nil? && ((params[:id] != @page.slug) && (request.path != "/"))
+      if params[:preview].nil? && params[:id].present? && params[:id] != @page.slug
         return redirect_to @page, :status => :moved_permanently
       end
       
       @posts = @page.posts
       @posts = Storytime.search_adapter.search(params[:search], get_search_type) if (params[:search] && params[:search].length > 0)
       @posts = @posts.tagged_with(params[:tag]) if params[:tag]
-      @posts = @posts.published.order(published_at: :desc).page(params[:page])
+      @posts = @posts.published.order(published_at: :desc).page(params[:page_number])
 
       #allow overriding in the host app
       render "storytime/#{@current_storytime_site.custom_view_path}/blogs/#{@page.slug}" if lookup_context.template_exists?("storytime/#{@current_storytime_site.custom_view_path}/blogs/#{@page.slug}")
@@ -28,7 +28,11 @@ module Storytime
       else
         Post.published.friendly.find(params[:id])
       end
-      redirect_to "/", status: :moved_permanently if @page == @current_storytime_site.homepage
+
+      if @page == @current_storytime_site.homepage
+        opts = params[:tag] ? { tag: params[:tag] } : {}
+        redirect_to storytime.root_path(opts), status: :moved_permanently
+      end
     end
     
     def get_search_type

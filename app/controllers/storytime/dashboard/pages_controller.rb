@@ -1,3 +1,5 @@
+require_dependency "storytime/dashboard/posts_controller"
+
 module Storytime
   module Dashboard
     class PagesController < PostsController
@@ -15,8 +17,10 @@ module Storytime
 
         @posts = if params[:published].present? && params[:published] == 'true'
           @posts.published.order(published_at: :desc)
-        else
+        elsif params[:draft].present? && params[:draft] == "true"
           @posts.draft.order(updated_at: :desc)
+        else
+          @posts.order(published_at: :desc)
         end
       end
     end
