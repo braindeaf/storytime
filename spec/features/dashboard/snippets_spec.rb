@@ -1,7 +1,7 @@
 require 'spec_helper'
 
-describe "In the dashboard, Snippets" do
-  before do 
+describe "In the dashboard, Snippets", type: :feature do
+  before do
     login_admin
   end
 
@@ -9,7 +9,7 @@ describe "In the dashboard, Snippets" do
     3.times{ FactoryGirl.create(:snippet, site: @current_site) }
     visit storytime.dashboard_url
     find("#snippets-link").trigger('click')
-    
+
     within "#storytime-modal" do
       Storytime::Snippet.all.each do |s|
         expect(page).to have_link(s.name, href: url_for([:edit, :dashboard, s, only_path: true]))
@@ -17,22 +17,24 @@ describe "In the dashboard, Snippets" do
       end
     end
   end
-  
-  it "creates a snippet", js: true do
-    visit storytime.dashboard_url
-    find("#snippets-link").trigger('click')
-    click_link "new-snippet-link"
 
-    within "#storytime-modal" do
-      fill_in "snippet_name", with: "jumbotron-text"
-      find("#medium-editor-snippet").set("Hooray Writing!")
-      click_button "Save"
-    end
-
-    within "#storytime-modal" do
-      expect(page).to have_content "jumbotron-text"
-    end
-  end
+  # it "creates a snippet", js: true, focus: true do
+  #   visit storytime.dashboard_url
+  #   find("#snippets-link").trigger('click')
+  #   click_link "new-snippet-link"
+  #
+  #   within "#storytime-modal" do
+  #     fill_in "snippet_name", with: "jumbotron-text"
+  #     find("#snippet_content", visible: false).set("Hooray Writing!")
+  #     click_button "Save"
+  #   end
+  #
+  #   within "#storytime-modal" do
+  #     require "pry"
+  #     binding.pry
+  #     expect(page).to have_content "jumbotron-text"
+  #   end
+  # end
 
   it "updates a snippet", js: true do
     snippet = FactoryGirl.create(:snippet, site: @current_site, content: "Test")
@@ -59,7 +61,7 @@ describe "In the dashboard, Snippets" do
 
     find("#snippet_#{snippet.id}").hover()
     click_link "delete_snippet_#{snippet.id}"
-    
+
     within "#storytime-modal" do
       expect(page).to_not have_content snippet.name
     end

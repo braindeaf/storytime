@@ -1,4 +1,4 @@
-require_dependency "storytime/application_controller"
+require_dependency "storytime/dashboard_controller"
 
 module Storytime
   module Dashboard
@@ -6,8 +6,9 @@ module Storytime
       before_action :hide_nav, only: [:new, :create, :edit, :update]
       before_action :set_post, only: [:edit, :update, :destroy]
       before_action :load_posts, only: :index
+      before_action :sort_posts, only: :index
       before_action :load_media, only: [:new, :edit]
-      
+
       respond_to :json, only: :destroy
       respond_to :html, only: :destroy
 
@@ -56,7 +57,7 @@ module Storytime
       def update
         authorize @post
         @post.draft_user_id = current_user.id
-        
+
         if @post.update_attributes(post_params)
           @post.autosave.destroy unless @post.autosave.nil?
 
@@ -73,7 +74,7 @@ module Storytime
         authorize @post
         @post.destroy
         flash[:notice] = I18n.t('flash.posts.destroy.success') unless request.xhr?
-        
+
         respond_with [:dashboard, @post] do |format|
           format.html{ redirect_to [:dashboard, current_post_type], type: @post.type_name }
         end
@@ -87,12 +88,35 @@ module Storytime
       def load_posts
         @blog = Blog.friendly.find(params[:blog_id])
         @posts = @blog.posts.page(params[:page_number]).per(10)
-        if params[:published].present? && params[:published] == "true"
-          @posts = @posts.published.order(created_at: :desc)
+
+        @posts = if params[:published].present? && params[:published] == "true"
+          @posts.published
         elsif params[:draft].present? && params[:draft] == "true"
-          @posts = @posts.draft.order(updated_at: :desc)
+          @posts.draft
         else
-          @posts = @posts.order(published_at: :desc)
+          @posts
+        end
+      end
+
+      def sort_posts
+        @posts = if params[:sort].present?
+          if params[:sort] == "title"
+            @posts.order(title: :asc)
+          elsif params[:sort] == "slug"
+            @posts.order(slug: :asc)
+          elsif params[:sort] == "published_at"
+            @posts.order(published_at: :desc)
+          elsif params[:sort] == "created_at"
+            @posts.order(created_at: :desc)
+          else
+            @posts.order(published_at: :desc)
+          end
+        elsif params[:published] == "true"
+          @posts.order(created_at: :desc)
+        elsif params[:draft] == "true"
+          @posts.order(updated_at: :desc)
+        else
+          @posts.order(published_at: :desc)
         end
       end
 

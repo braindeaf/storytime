@@ -1,7 +1,7 @@
 require 'active_record'
 require 'bootstrap-sass'
+require 'fog/aws'
 require 'carrierwave'
-require 'fog/aws/storage'
 require 'font-awesome-sass'
 require 'friendly_id'
 require 'jbuilder'
@@ -35,6 +35,8 @@ module Storytime
   class Engine < ::Rails::Engine
     isolate_namespace Storytime
 
+    config.assets.precompile += %w( storytime/storytime-logo-nav.png )
+
     initializer "storytime.view_helpers" do
       ActiveSupport.on_load(:action_view) do
         include Storytime::ApplicationHelper
@@ -65,16 +67,17 @@ module Storytime
     initializer "storytime.configure_carrierwave" do
       CarrierWave.configure do |config|
         if Storytime.media_storage == :s3
-          config.storage = :fog
+          config.fog_provider = 'fog/aws'
           config.fog_credentials = {
-            :provider               => 'AWS',
-            :region                 => Storytime.aws_region,
-            :aws_access_key_id      => Storytime.aws_access_key_id,
-            :aws_secret_access_key  => Storytime.aws_secret_key
+            provider:              'AWS',
+            aws_access_key_id:     Storytime.aws_access_key_id,
+            aws_secret_access_key: Storytime.aws_secret_key,
+            region:                Storytime.aws_region
           }
           config.fog_directory  = Storytime.s3_bucket
           config.fog_public     = true
-          config.fog_attributes = {'Cache-Control'=>'max-age=315576000'}  # optional, defaults to {}
+          config.fog_attributes = {'Cache-Control'=>'max-age=315576000'}
+          config.storage = :fog
         else
           config.storage = :file
         end
